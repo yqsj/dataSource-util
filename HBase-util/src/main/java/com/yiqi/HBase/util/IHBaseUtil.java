@@ -3,6 +3,8 @@ package com.yiqi.HBase.util;
 import lombok.NonNull;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.Row;
 
 import java.io.IOException;
 import java.util.List;
@@ -70,6 +72,8 @@ public interface IHBaseUtil {
 
     /**
      * put 操作
+     * 实际上是一个RPC操作，他将客户端数据传送到服务器然后返回，只适合小数据量的操作。
+     * HBase的API配备了一个客户端的写缓冲区(Write buffer),缓冲区负责收集put操作，然后调用RPC操作一次性将put送往服务器。
      * @param put 执行put的数据
      * @throws IOException
      */
@@ -117,6 +121,14 @@ public interface IHBaseUtil {
      * @param tableName 表名称
      */
     public void deleteTable(String tableName);
+
+    /**
+     * 批量操作
+     * 支持put、get、delete都支持，但他们都不使用客户端写缓冲区
+     * @param rows
+     * @return
+     */
+    public Result[] batchOption(List<Row> rows);
 
     /**
      * 资源释放

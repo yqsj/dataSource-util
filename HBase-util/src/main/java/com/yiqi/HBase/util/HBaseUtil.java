@@ -32,7 +32,7 @@ public class HBaseUtil implements IHBaseUtil {
      * @param zk zookeeper host:post
      */
     public HBaseUtil(String zk){
-            this.zk = zk;
+        this.zk = zk;
             this.configuration = new Configuration();
             this.configuration.set("hbase.zookeeper.quorum",this.zk);
     }
@@ -213,6 +213,17 @@ public class HBaseUtil implements IHBaseUtil {
         }catch (IOException e){
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public Result[] batchOption(List<Row> rows) {
+        Result[] results = new Result[rows.size()];
+        try {
+            table.batch(rows,results);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return results;
     }
 
     @Override

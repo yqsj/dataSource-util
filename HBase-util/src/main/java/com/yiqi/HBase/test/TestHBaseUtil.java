@@ -2,16 +2,16 @@ package com.yiqi.HBase.test;
 
 
 import com.yiqi.HBase.util.HBaseUtil;
-import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.CellUtil;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.filter.BinaryPrefixComparator;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.ValueFilter;
 import org.apache.hadoop.hbase.util.Bytes;
-import java.util.NavigableMap;
-import java.util.TreeMap;
+
+import java.util.*;
 
 /**
  * @description: HBase工具类测试
@@ -57,9 +57,22 @@ public class TestHBaseUtil {
 //            resultScanner.forEach(result -> {
 //                System.out.println(Bytes.toString(result.getValue("info1".getBytes(),"name".getBytes())));
 //            });
-            NavigableMap<String,Object> resultMap = new TreeMap<>();
-            ResultScanner resultScanner = table.getScanner(scan);
-            resultScanner.forEach(result -> System.out.println(Bytes.toString(result.getValue("info1".getBytes(),"name".getBytes()))));
+//            NavigableMap<String,Object> resultMap = new TreeMap<>();
+//            ResultScanner resultScanner = table.getScanner(scan);
+//            resultScanner.forEach(result -> System.out.println(Bytes.toString(result.getValue("info1".getBytes(),"name".getBytes()))));
+//
+            Get get = new Get("row101".getBytes());
+            Put put = new Put("row101".getBytes());
+            List<Row> rows = new ArrayList<>();
+            get.addFamily("info1".getBytes());
+            put.addColumn("info1".getBytes(),"name".getBytes(),"王宇".getBytes());
+            rows.add(get);
+            rows.add(put);
+            Result[] results = hBaseUtil.batchOption(rows);
+            Arrays.stream(results).forEach(result->{
+                Cell cell = result.getColumnLatestCell("info1".getBytes(),"name".getBytes());
+                System.out.println( cell != null ? Bytes.toString(CellUtil.cloneValue(cell)) : null);
+            });
         }catch (Exception e){
             e.printStackTrace();
         }
