@@ -1,4 +1,4 @@
-HELP.md
+HBase-util/HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/

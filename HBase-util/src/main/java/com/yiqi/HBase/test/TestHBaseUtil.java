@@ -1,6 +1,7 @@
 package com.yiqi.HBase.test;
 
 
+import com.yiqi.HBase.util.ByteUtils;
 import com.yiqi.HBase.util.HBaseUtil;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
@@ -10,7 +11,9 @@ import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.ValueFilter;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.junit.Test;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -23,7 +26,7 @@ public class TestHBaseUtil {
     private static Table table;
     static {
         hBaseUtil = new HBaseUtil();
-        hBaseUtil.initConnection().initAdmin().initTable("why_test");
+        hBaseUtil.initConnection().initAdmin().initTable("Data:Imsi");
         table = hBaseUtil.getTable();
     }
 
@@ -78,6 +81,38 @@ public class TestHBaseUtil {
         }
 
         hBaseUtil.releaseResource();
+    }
+
+    @Test
+    public void test(){
+        table = hBaseUtil.getTable();
+        Scan scan = new Scan();
+        scan.setLimit(5);
+        try {
+            ResultScanner resultScanner = table.getScanner(scan);
+            List<byte[]> rowkeys = new ArrayList<>();
+            resultScanner.forEach(result -> {
+                try {
+                    rowkeys.add(Bytes.toBytes(ByteUtils.uncompress(CellUtil.cloneValue(result.getColumnLatestCell("c".getBytes(), "c".getBytes())))));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+            rowkeys.stream().forEach(i-> System.out.println(Bytes.toString(i)));
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void test2(){
+        byte[] _bytes = "a".getBytes();
+        for (int i = 0; i < _bytes.length; i++) {
+            System.out.println(_bytes[i]);
+            _bytes[i] = (byte) (_bytes[i] + 1);
+            System.out.println(_bytes[i]);
+        }
+
     }
 
 
