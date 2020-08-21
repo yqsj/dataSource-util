@@ -1,4 +1,4 @@
-package com.yiqi.ElasticSearch;
+package com.yiqi.ElasticSearch.test;
 
 import org.apache.http.HttpHost;
 import org.elasticsearch.ElasticsearchException;
@@ -50,12 +50,12 @@ public class TestESJavaAPI {
      }
 
     public static void main(String[] args) {
-//        testIndexRequestAPI();
-//        testGetRequestAPI();
-//        testExistsRequestAPI();
-//        testDeleteRequestAPI();
-//        testUpdateRequestAPI();
-//        testBulkRequestAPI();
+        testIndexRequestAPI();
+        testGetRequestAPI();
+        testExistsRequestAPI();
+        testDeleteRequestAPI();
+        testUpdateRequestAPI();
+        testBulkRequestAPI();
         testSearchRequestAPI();
         try {
             client.close();
