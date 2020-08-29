@@ -24,13 +24,14 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.TermsQueryBuilder;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.sort.SortBuilder;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -41,6 +42,10 @@ import java.util.concurrent.TimeUnit;
 public class ElasticSearchUtil {
     // client
     private static RestHighLevelClient restHighLevelClient;
+
+    public ElasticSearchUtil(String esIp,Integer port,String scheme) {
+        this.createClient(esIp, port, scheme);
+    }
 
     /**
      * 创建es的连接
@@ -181,7 +186,7 @@ public class ElasticSearchUtil {
      * @throws IOException
      */
     public DeleteResponse execDelete(String index,String indexType,String docId) throws IOException{
-        return execDelete(index,indexType,docId);
+        return restHighLevelClient.delete(new DeleteRequest(index,indexType,docId),RequestOptions.DEFAULT);
     }
 
     /**
@@ -415,6 +420,7 @@ public class ElasticSearchUtil {
         return restHighLevelClient.search(createSearch(index,indexType)
                 .source(createSearchSourceBuilder(from,size,null,null,null,null).query(matchQueryBuilder)),RequestOptions.DEFAULT);
     }
+
     /**
      * 获取当前的restHighLevelClient
      * @return RestHighLevelClient
@@ -423,6 +429,21 @@ public class ElasticSearchUtil {
         return restHighLevelClient;
     }
 
+    /**
+     * 将SearchRespose中的数据处理成List<Map<String,Object>>
+     * @param response
+     * @return
+     */
+    public List<Map<String,Object>> getMapFromSearchRes(SearchResponse response){
+        List<Map<String,Object>> result = new ArrayList<>();
+        SearchHits searchHits = response.getHits();
+        SearchHit[] hits = searchHits.getHits();
+        Arrays.stream(hits).parallel().forEach(i->{
+            Map<String,Object> map = i.getSourceAsMap();
+            result.add(map);
+        });
+        return result;
+    }
 
 
 }
