@@ -14,7 +14,7 @@ import java.util.List;
  * @date: 2020-08-29
  */
 public class MongoTest {
-    private MongoUtil mongoUtil = new MongoUtil("yqsj",27017,"test");
+    private MongoUtil mongoUtil = new MongoUtil("yqsj",32771,"root","admin","blog","why2020");
 
     @Test
     public void testInsertOne(){

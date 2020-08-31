@@ -23,13 +23,13 @@ public class MongoUtil {
     private MongoClient mongoClient;
     private MongoDatabase mongoDatabase;
 
-    public MongoUtil(String serveIp, Integer port, String userName, String dataBaseName, String passwd){
+    public MongoUtil(String serveIp, Integer port, String userName, String dataBase,String dataBaseName, String passwd){
         List<ServerAddress> serverAddresses = new ArrayList<>();
         // 创建server地址
         ServerAddress serverAddress = new ServerAddress(serveIp, port);
         serverAddresses.add(serverAddress);
         List<MongoCredential> credentials = new ArrayList<>();
-        MongoCredential mongoCredential = MongoCredential.createScramSha1Credential(userName, dataBaseName, passwd.toCharArray());
+        MongoCredential mongoCredential = MongoCredential.createScramSha1Credential(userName, dataBase, passwd.toCharArray());
         credentials.add(mongoCredential);
         this.mongoClient = new MongoClient(serverAddresses, credentials);
         this.mongoDatabase = mongoClient.getDatabase(dataBaseName);
