@@ -23,7 +23,9 @@ import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.index.query.TermsQueryBuilder;
+import org.elasticsearch.index.search.MatchQuery;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -39,11 +41,11 @@ import java.util.concurrent.TimeUnit;
  * @author: Wang Hongyu
  * @date: 2020-08-06
  */
-public class ElasticSearchUtil {
+public class ESRestHighClientUtil {
     // client
     private static RestHighLevelClient restHighLevelClient;
 
-    public ElasticSearchUtil(String esIp,Integer port,String scheme) {
+    public ESRestHighClientUtil(String esIp, Integer port, String scheme) {
         this.createClient(esIp, port, scheme);
     }
 
@@ -330,39 +332,16 @@ public class ElasticSearchUtil {
     }
 
     /**
-     * 同步执行Search
-     * @param index
-     * @param indexType
-     * @return
-     * @throws IOException
-     */
-    public SearchResponse execSearch(String index,String indexType) throws IOException{
-        return restHighLevelClient.search(createSearch(index, indexType),RequestOptions.DEFAULT);
-    }
-
-    /**
-     * 同步执行Search
-     * @param index 索引
-     * @param indexType type
-     * @param from
-     * @param size
-     * @param termsQueryBuilder
-     * @return
-     * @throws IOException
-     */
-    public SearchResponse execSearch(String index, String indexType, Integer from, Integer size,
-                                     TermsQueryBuilder termsQueryBuilder)throws IOException{
-        return restHighLevelClient.search(createSearch(index,indexType)
-                .source(createSearchSourceBuilder(from,size,termsQueryBuilder,null,null,null)),RequestOptions.DEFAULT);
-    }
-
-    /**
      * createSearchSourceBuilder
      * @param from
      * @param size
      * @param termsQueryBuilder
      * @param sortField
-     * @param sortBuilder
+     * @param sortBuilder SortBuilder是一个抽象类，有4个子类
+     * org.elasticsearch.search.sort.FieldSortBuilder 根据某属性值排序
+     * org.elasticsearch.search.sort.GeoDistanceSortBuilder 根据地理位置排序
+     * org.elasticsearch.search.sort.ScoreSortBuilder 根据score排序
+     * org.elasticsearch.search.sort.ScriptSortBuilder 根据自定义脚本排序
      * @param fetchSource
      * @return
      */
@@ -390,6 +369,33 @@ public class ElasticSearchUtil {
             searchSourceBuilder.fetchSource(fetchSource);
         }
         return searchSourceBuilder;
+    }
+
+    /**
+     * 同步执行Search
+     * @param index
+     * @param indexType
+     * @return
+     * @throws IOException
+     */
+    public SearchResponse execSearch(String index,String indexType) throws IOException{
+        return restHighLevelClient.search(createSearch(index, indexType),RequestOptions.DEFAULT);
+    }
+
+    /**
+     * 同步执行Search
+     * @param index 索引
+     * @param indexType type
+     * @param from
+     * @param size
+     * @param termsQueryBuilder
+     * @return
+     * @throws IOException
+     */
+    public SearchResponse execSearch(String index, String indexType, Integer from, Integer size,
+                                     TermsQueryBuilder termsQueryBuilder)throws IOException{
+        return restHighLevelClient.search(createSearch(index,indexType)
+                .source(createSearchSourceBuilder(from,size,termsQueryBuilder,null,null,null)),RequestOptions.DEFAULT);
     }
 
     /**
@@ -421,6 +427,61 @@ public class ElasticSearchUtil {
                 .source(createSearchSourceBuilder(from,size,null,null,null,null).query(matchQueryBuilder)),RequestOptions.DEFAULT);
     }
 
+    public SearchResponse execSearch(String index, String indexType, Integer from, Integer size, MatchQueryBuilder matchQueryBuilder,String sortField) throws IOException{
+        if(null == matchQueryBuilder){
+            throw new ElasticsearchException("matchQueryBuilder为null");
+        }
+        return restHighLevelClient.search(createSearch(index,indexType).source(createSearchSourceBuilder(from,size,null,sortField,
+                null,null).query(matchQueryBuilder)),RequestOptions.DEFAULT);
+    }
+
+    public SearchResponse execSearch(String index,String indexType,Integer from,Integer size,MatchQueryBuilder matchQueryBuilder,String sortField,Boolean fetchSource) throws IOException{
+        if (null == matchQueryBuilder) {
+            throw new ElasticsearchException("matchQueryBuilder为null");
+        }
+        return restHighLevelClient.search(createSearch(index, indexType).source(createSearchSourceBuilder(from, size, null, sortField, null,
+                fetchSource).query(matchQueryBuilder)),RequestOptions.DEFAULT);
+    }
+
+    public SearchResponse execSearch(String index,String indexType,Integer from,Integer size,MatchQueryBuilder matchQueryBuilder,SortBuilder sortBuilder) throws IOException{
+        if(null == matchQueryBuilder){
+            throw new ElasticsearchException("matchQueryBuilder为null");
+        }
+        return restHighLevelClient.search(createSearch(index,indexType).source(createSearchSourceBuilder(from,size,null,null,
+                sortBuilder,null).query(matchQueryBuilder)),RequestOptions.DEFAULT);
+    }
+
+    public SearchResponse execSearch(String index, String indexType, Integer from, Integer size, TermsQueryBuilder termsQueryBuilder, MatchQueryBuilder matchQueryBuilder, String sortField) throws IOException {
+        if (null == matchQueryBuilder) {
+            throw new ElasticsearchException("matchQueryBuilder为null");
+        }
+        return restHighLevelClient.search(createSearch(index, indexType).source(createSearchSourceBuilder(from, size, termsQueryBuilder, sortField, null,
+                null).query(matchQueryBuilder)),RequestOptions.DEFAULT);
+    }
+
+    public SearchResponse execSearch(String index, String indexType, Integer from, Integer size, TermsQueryBuilder termsQueryBuilder, MatchQueryBuilder matchQueryBuilder, SortBuilder sortBuilder, Boolean fetchSource) throws IOException {
+        if (null == matchQueryBuilder) {
+            throw new ElasticsearchException("matchQueryBuilder为null");
+        }
+        return restHighLevelClient.search(createSearch(index, indexType).source(createSearchSourceBuilder(from, size, termsQueryBuilder, null, sortBuilder,
+                fetchSource).query(matchQueryBuilder)),RequestOptions.DEFAULT);
+    }
+
+    public SearchResponse execSearch(String index, String indexType, Integer from, Integer size, TermsQueryBuilder termsQueryBuilder, MatchQueryBuilder matchQueryBuilder, SortBuilder sortBuilder) throws IOException {
+        if (null == matchQueryBuilder) {
+            throw new ElasticsearchException("matchQueryBuilder为null");
+        }
+        return restHighLevelClient.search(createSearch(index, indexType).source(createSearchSourceBuilder(from, size, termsQueryBuilder, null,
+                sortBuilder, null).query(matchQueryBuilder)),RequestOptions.DEFAULT);
+    }
+
+    public SearchResponse execSearch(String index, String indexType, Integer from, Integer size, TermsQueryBuilder termsQueryBuilder, MatchQueryBuilder matchQueryBuilder, String sortField, Boolean fetchSource) throws IOException {
+        if (null == matchQueryBuilder) {
+            throw new ElasticsearchException("matchQueryBuilder为null");
+        }
+        return restHighLevelClient.search(createSearch(index, indexType).source(createSearchSourceBuilder(from, size, termsQueryBuilder, sortField, null,
+                fetchSource).query(matchQueryBuilder)),RequestOptions.DEFAULT);
+    }
     /**
      * 获取当前的restHighLevelClient
      * @return RestHighLevelClient
@@ -438,7 +499,7 @@ public class ElasticSearchUtil {
         List<Map<String,Object>> result = new ArrayList<>();
         SearchHits searchHits = response.getHits();
         SearchHit[] hits = searchHits.getHits();
-        Arrays.stream(hits).parallel().forEach(i->{
+        Arrays.stream(hits).forEach(i->{
             Map<String,Object> map = i.getSourceAsMap();
             result.add(map);
         });

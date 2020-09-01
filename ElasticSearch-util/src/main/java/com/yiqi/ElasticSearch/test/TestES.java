@@ -1,6 +1,6 @@
 package com.yiqi.ElasticSearch.test;
 
-import com.yiqi.ElasticSearch.util.ElasticSearchUtil;
+import com.yiqi.ElasticSearch.util.ESRestHighClientUtil;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
@@ -9,12 +9,8 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.TermsQueryBuilder;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHits;
 import org.junit.Test;
-
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,15 +21,15 @@ import java.util.Map;
  * @date: 2020-08-24
  */
 public class TestES {
-    private static ElasticSearchUtil searchUtil = new ElasticSearchUtil("192.168.1.66",9200,"http");
-    private static String index = "czhtest";
-    private static String indexType = "czhindex1";
-    private static String docId = "26";
+    private static ESRestHighClientUtil searchUtil = new ESRestHighClientUtil("localhost",9200,"http");
+    private static String index = "why_test";
+    private static String indexType = "type1";
+    private static String docId = "41";
 
     @Test
     public void testIndex(){
         Map<String,Object> map = new HashMap<>();
-        map.put("doom","dad");
+        map.put("name","这是一段很随意的话，请不要在意。");
         try{
             IndexResponse indexResponse = searchUtil.execIndex(index,indexType,docId,map);
             System.out.println(indexResponse);
@@ -45,7 +41,7 @@ public class TestES {
     @Test
     public void testGet(){
         try {
-            GetResponse getResponse = searchUtil.execGet("czhtest","czhindex1","26");
+            GetResponse getResponse = searchUtil.execGet(index,indexType,docId);
             Map<String,Object> map = getResponse.getSourceAsMap();
             map.entrySet().forEach(j->{
                 System.out.println(j.getKey());
@@ -70,7 +66,7 @@ public class TestES {
     @Test
     public void testUpdate(){
         Map<String,Object> map = new HashMap<>();
-        map.put("doom","lxf");
+        map.put("uesr","lxf");
         try {
             UpdateResponse updateResponse = searchUtil.execUpdate(index,indexType,docId,true,map);
             System.out.println(updateResponse);
@@ -82,7 +78,7 @@ public class TestES {
     @Test
     public void testDel(){
         try {
-            DeleteResponse deleteResponse = searchUtil.execDelete(index,indexType,"6");
+            DeleteResponse deleteResponse = searchUtil.execDelete(index,indexType,docId);
             System.out.println(deleteResponse);
         }catch (IOException e){
             e.printStackTrace();
@@ -93,12 +89,9 @@ public class TestES {
     public void testSearch1(){
         try {
             SearchResponse searchResponse = searchUtil.execSearch(index,indexType);
-            SearchHits hits = searchResponse.getHits();
-            SearchHit[] searchHits = hits.getHits();
-            Arrays.stream(searchHits).forEach(i->{
-                System.out.println(i.getScore());
-                Map<String,Object> map = i.getSourceAsMap();
-                map.entrySet().forEach(j->{
+            List<Map<String,Object>> mapList = searchUtil.getMapFromSearchRes(searchResponse);
+            mapList.forEach(i->{
+                i.entrySet().forEach(j->{
                     System.out.println(j.getKey());
                     System.out.println(j.getValue());
                 });
@@ -111,11 +104,11 @@ public class TestES {
     @Test
     public void testSearch2(){
         try {
-            SearchResponse searchResponse = searchUtil.execSearch(index,indexType,1,99,
-                    new TermsQueryBuilder("name","黑木"));
+            SearchResponse searchResponse = searchUtil.execSearch(index,indexType,2,1,
+                    new TermsQueryBuilder("name","lxf","why"));
             List<Map<String,Object>> mapList = searchUtil.getMapFromSearchRes(searchResponse);
-            mapList.parallelStream().forEach(i->{
-              i.entrySet().parallelStream().forEach(j->{
+            mapList.forEach(i->{
+              i.entrySet().forEach(j->{
                   System.out.println(j.getKey());
                   System.out.println(j.getValue());
               });
@@ -128,15 +121,15 @@ public class TestES {
     @Test
     public void testSearch3(){
         try {
-            SearchResponse searchResponse = searchUtil.execSearch(index,indexType,1,99,
-                    new MatchQueryBuilder("name","黑木")
+            SearchResponse searchResponse = searchUtil.execSearch(index,indexType,0,1,
+                    new MatchQueryBuilder("name","随意")
                             .fuzziness(Fuzziness.AUTO)
-                            .prefixLength(3)
-                            .maxExpansions(10)
+                            .prefixLength(2) //不会被"模糊化"的初始字符数量。这有助于减少必须检查的术语数量。默认为0
+                            .maxExpansions(10) //模糊查询将扩展到的最大条数。默认为50
             );
             List<Map<String,Object>> mapList = searchUtil.getMapFromSearchRes(searchResponse);
-            mapList.parallelStream().forEach(i->{
-                i.entrySet().parallelStream().forEach(j->{
+            mapList.forEach(i->{
+                i.entrySet().forEach(j->{
                     System.out.println(j.getKey());
                     System.out.println(j.getValue());
                 });
@@ -146,7 +139,5 @@ public class TestES {
             e.printStackTrace();
         }
     }
-
-
 
 }
